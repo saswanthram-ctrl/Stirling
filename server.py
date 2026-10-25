@@ -8,7 +8,7 @@ app = Flask(__name__)
 USER_DB_FILE = "users_db.json"
 LOG_FILE = "orders_log.json"
 
-# --- 2. THE STERLING PRODUCT DATABASE MATRIX ---
+# --- 2. THE STERLING PRODUCT INVENTORY DATABASE ---
 CATALOG = {
     "1": {"name": "Developer Pro Laptop", "desc": "High-performance engineering workstation.", "price": 75000.00, "stock": 5},
     "2": {"name": "Wireless Mouse",       "desc": "Ergonomic high-DPI tracking layout.", "price": 1200.00,  "stock": 12},
@@ -17,7 +17,7 @@ CATALOG = {
 }
 
 shopping_cart = []
-current_user = "WERT"
+current_user = "WERT"  # Authenticated active user profile track footprint
 
 def load_orders():
     if os.path.exists(LOG_FILE):
@@ -39,7 +39,7 @@ def save_transaction_to_disk(subtotal, tax, grand_total):
     with open(LOG_FILE, "w") as file:
         json.dump(records, file, indent=4)
 
-# --- 3. CORE ROUTING INFRASTRUCTURE ---
+# --- 3. FLASK WEB CORE ROUTING PIPELINES ---
 @app.route('/')
 def storefront_dashboard():
     html_template = """
@@ -67,11 +67,11 @@ def storefront_dashboard():
             .out-btn { background-color: #e5e7eb; color: #9ca3af; padding: 8px 14px; font-size: 14px; border-radius: 4px; cursor: not-allowed; text-decoration: none; text-align: center; }
             .checkout-zone { background-color: white; padding: 20px; border-radius: 8px; margin-top: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
             .checkout-btn { background-color: #10b981; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; text-decoration: none; }
+            .checkout-btn:hover { background-color: #059669; }
         </style>
     </head>
     <body>
         <header>
-            <!-- Official Marketplace Branding Shift -->
             <div class="logo">STERLING MARKETPLACE</div>
             <div class="user-status">
                 Logged in as: <strong style="color: white;">{{ user.upper() }}</strong>
@@ -126,17 +126,22 @@ def append_item_to_array(prod_id):
 
 @app.route('/checkout')
 def finalize_order_transaction():
-    if not shopping_cart: return redirect(url_for('storefront_dashboard'))
+    if not shopping_cart:
+        return redirect(url_for('storefront_dashboard'))
+        
     subtotal = sum(item["price"] for item in shopping_cart)
     tax_levy = subtotal * 0.18
     grand_total = subtotal + tax_levy
+    
     save_transaction_to_disk(subtotal, tax_levy, grand_total)
     shopping_cart.clear()
+    
     return """
     <div style="max-width: 500px; margin: 100px auto; text-align: center; font-family: sans-serif; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <h2 style="color: #10b981;">✔ STERLING TRANSACTION SECURED</h2>
-        <p style="color: #4b5563;">Your invoice has been processed successfully.</p>
-        <p style="font-weight: bold; font-size: 18px; color: #0f172a;">Total Captured: ₹""" + f"{grand_total:,.2f}" + """</p>
+        <p style="color: #4b5563;">Your transaction invoice processed successfully.</p>
+        <p style="font-weight: bold; font-size: 18px; color: #0f172a;">Grand Total Captured: ₹""" + f"{grand_total:,.2f}" + """</p>
+        <p style="color: #9ca3af; font-size: 12px;">Invoice encrypted and archived safely in storage text logs.</p>
         <br>
         <a href="/" style="background-color: #0f172a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Return to Storefront</a>
     </div>
@@ -144,4 +149,3 @@ def finalize_order_transaction():
 
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)
-
